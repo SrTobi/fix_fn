@@ -82,7 +82,7 @@ macro_rules! fix_fn {
             #[inline]
             $($mov)?
             |$self_arg, $($arg_name : $arg_type ,)*| -> $ret_type {
-                let $self_arg = |$($arg_name : $arg_type)*| $self_arg.call($($arg_name ,)*);
+                let $self_arg = |$($arg_name : $arg_type ),*| $self_arg.call($($arg_name ,)*);
                 {
                     $body
                 }
@@ -91,8 +91,8 @@ macro_rules! fix_fn {
 
 
         #[inline]
-        move |$($arg_name : $arg_type)*| -> $ret_type {
-            inner.call($($arg_name)*)
+        move |$($arg_name : $arg_type),*| -> $ret_type {
+            inner.call($($arg_name),*)
         }
     }};
     (
@@ -143,22 +143,6 @@ mod tests {
 
     #[test]
     fn test_one_parameter() {
-        let x = 2;
-
-        let f = fix_fn!(|f, i: i32| -> i32 {
-            if i == 0 {
-                0
-            } else {
-                x + f(i - 1)
-            }
-        });
-
-        let t = 4;
-        assert_eq!(f(t), t * x);
-    }
-
-    #[test]
-    fn test_two_parameter() {
         let fib = fix_fn!(|fib, i: u32| -> u32 {
             if i <= 1 {
                 i
@@ -168,5 +152,20 @@ mod tests {
         });
 
         assert_eq!(fib(7), 13);
+    }
+
+    #[test]
+    fn test_two_parameter() {
+        let pow = fix_fn!(|pow, x: u32, y: u32| -> u32 {
+            if y == 1 {
+                x
+            } else if x % 2 == 0 {
+                pow(x * x, x / 2)
+            } else {
+                x * pow(x, y - 1)
+            }
+        });
+
+        assert_eq!(pow(3, 9), 19683);
     }
 }
