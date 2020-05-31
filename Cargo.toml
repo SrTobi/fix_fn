@@ -1,7 +1,9 @@
 [package]
 name = "fix_fn"
 version = "0.1.0"
-authors = ["SrTobi <code.databyte@gmail.com>"]
+authors = ["Tobias Kahlert <code.databyte@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "Macro to create recursive closures (similar to the Y combinator)."
 
 [dependencies]
