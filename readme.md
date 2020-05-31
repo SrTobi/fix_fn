@@ -1,6 +1,6 @@
 [![Build](https://github.com/SrTobi/fix_fn/workflows/Rust/badge.svg)](https://github.com/SrTobi/fix_fn/actions)
 [![Creates.io](https://img.shields.io/crates/v/fix_fn?style)](https://crates.io/crates/fix_fn)
-[![Doc](https://img.shields.io/crates/v/fix_fn)](https://docs.rs/fix_fn/)
+[![Docs](https://docs.rs/fix_fn/badge.svg)](https://docs.rs/fix_fn/)
 
 # fix_fn
 
@@ -10,7 +10,7 @@ single macro `fix_fn`. The functionality is similar to the
 Recursive closures can have arbitrary amounts of parameters and can capture
 variables.
 
-```
+```rust
 use fix_fn::fix_fn;
 let fib = fix_fn!(|fib, i: u32| -> u32 {
     if i <= 1 {
