@@ -1,4 +1,3 @@
-
 #[macro_export]
 macro_rules! fix_fn {
     (
@@ -58,9 +57,6 @@ macro_rules! fix_fn {
     };
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
@@ -70,15 +66,14 @@ mod tests {
         fn create() -> impl Fn() -> i32 {
             let cell = RefCell::new(0);
 
-            fix_fn!(
-                move |rec| -> i32 {
-                    if *cell.borrow() == 10 { 10 }
-                    else {
-                        *cell.borrow_mut() += 1;
-                        rec()
-                    }
-                } 
-            )
+            fix_fn!(move |rec| -> i32 {
+                if *cell.borrow() == 10 {
+                    10
+                } else {
+                    *cell.borrow_mut() += 1;
+                    rec()
+                }
+            })
         }
 
         let f = create();
@@ -90,15 +85,13 @@ mod tests {
     fn test_one_parameter() {
         let x = 2;
 
-        let f = fix_fn!(
-            |f, i: i32| -> i32 {
-                if i == 0 {
-                    0
-                } else {
-                    x + f(i - 1)
-                }
+        let f = fix_fn!(|f, i: i32| -> i32 {
+            if i == 0 {
+                0
+            } else {
+                x + f(i - 1)
             }
-        );
+        });
 
         let t = 4;
         assert_eq!(f(t), t * x);
@@ -106,12 +99,13 @@ mod tests {
 
     #[test]
     fn test_two_parameter() {
-        let fib = fix_fn!(
-            |fib, i: u32,|-> u32 {
-                if i <= 1 { i }
-                else { fib(i - 1) + fib(i - 2) }
+        let fib = fix_fn!(|fib, i: u32| -> u32 {
+            if i <= 1 {
+                i
+            } else {
+                fib(i - 1) + fib(i - 2)
             }
-        );
+        });
 
         assert_eq!(fib(7), 13);
     }
