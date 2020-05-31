@@ -1,9 +1,10 @@
 [package]
 name = "fix_fn"
-version = "0.1.0"
-authors = ["Tobias Kahlert <code.databyte@gmail.com>"]
+version = "1.0.0"
+authors = ["SrTobi <code.databyte@gmail.com>"]
 edition = "2018"
 license = "MIT"
 description = "Macro to create recursive closures (similar to the Y combinator)."
-
-[dependencies]
+homepage = "https://crates.io/crates/fix_fn"
+repository = "https://github.com/SrTobi/fix_fn"
+readme = "readme.md"
