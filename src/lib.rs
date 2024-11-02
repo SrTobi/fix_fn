@@ -18,31 +18,30 @@
 //!
 //! assert_eq!(fib(7), 13);
 //! ```
-//! 
+//!
 //! The generated code is not completely abstraction free as it uses one dyn trait
 //! (without any boxing) to overcome rust's recursive type limitations.
 //! In most cases, however, the optimizer should be able to eliminate any dynamic dispatch.
-//! 
-//! Unfortunately, mutable recursive closures are not supported.
-
+//!
+//! for FnMut closure, use the fix_fn_mut!() macro instead of fix_fn!().
 
 /// Takes a closure definition where the first parameter will be a [`Fn`] to the closure itself.
 /// Returns a recursive closure with the same signature, except the first parameter will be
 /// eliminated.
-/// 
+///
 /// The passed closure needs to have at least one parameter. This
 /// first parameter can be used to call the closure itself, achieving recursion.
 /// It must not be annotated with a type.
-/// 
+///
 /// Additional parameters will be parameters of the resulting closure.
 /// All additional parameters must be annotated with types.
-/// 
+///
 /// The closure definition needs to have a result-type annotation.
-/// 
+///
 /// `move` can be used and has the [usual semantic](https://doc.rust-lang.org/1.18.0/book/first-edition/closures.html#move-closures).
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use fix_fn::fix_fn;
 ///  
@@ -117,6 +116,70 @@ macro_rules! fix_fn {
     };
 }
 
+/// same as fix_fn!(), but for FnMut
+#[macro_export]
+macro_rules! fix_fn_mut {
+    (
+        $($mov:ident)? |$self_arg:ident $(, $arg_name:ident : $arg_type:ty)* $(,)? | $(-> $ret_type:ty)?
+        $body:block
+    ) => {{
+
+        trait HideFn {
+            fn call(&mut self, $($arg_name : $arg_type ,)*) $(-> $ret_type)?;
+        }
+
+        struct HideFnImpl<F: FnMut(&mut dyn HideFn, $($arg_type ,)*) $(-> $ret_type)?>(
+            std::cell::UnsafeCell<F>,
+        );
+
+        impl<F> HideFnImpl<F>
+        where
+            F: FnMut(&mut dyn HideFn, $($arg_type ,)*) $(-> $ret_type)?,
+        {
+            fn new(f: F) -> Self {
+                Self {
+                    0: std::cell::UnsafeCell::new(f),
+                }
+            }
+        }
+
+        impl<F: FnMut(&mut dyn HideFn, $($arg_type ,)*) $(-> $ret_type)?> HideFn for HideFnImpl<F> {
+            #[inline]
+            fn call(&mut self, $($arg_name : $arg_type ,)*) $(-> $ret_type)? {
+                unsafe { (*self.0.get())(self, $($arg_name ,)*) }
+            }
+        }
+
+        let mut inner = HideFnImpl::new(
+            #[inline]
+            $($mov)?
+            |$self_arg, $($arg_name : $arg_type ,)*| $(-> $ret_type)? {
+                let mut $self_arg = |$($arg_name : $arg_type ),*| $self_arg.call($($arg_name ,)*);
+                {
+                    $body
+                }
+            }
+        );
+
+        #[inline]
+        move |$($arg_name : $arg_type),*| $(-> $ret_type)? {
+            inner.call($($arg_name),*)
+        }
+    }};
+    (
+        $($mov:ident)? |$self_arg:ident : $self_type:ty $(, $arg_name:ident $(: $arg_type:ty)?)* $(,)? | $(-> $ret_type:ty)?
+        $body:block
+    ) => {
+        compile_error!(concat!("First parameter ", stringify!($self_arg), " may not have type annotation!"));
+    };
+    (
+        $($mov:ident)? |$self_arg:ident $(, $arg_name:ident $(: $arg_type:ty)?)* $(,)? | $(-> $ret_type:ty)?
+        $body:block
+    ) => {
+        compile_error!("All parameters except first need to have an explicit type annotation!");
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
@@ -167,5 +230,21 @@ mod tests {
         });
 
         assert_eq!(pow(3, 9), 19683);
+    }
+
+    #[test]
+    fn test_mut() {
+        let mut value = 0u8;
+
+        let mut f = fix_fn_mut!(|f| -> u8 {
+            if value == 10 {
+                10
+            } else {
+                value += 1;
+                f()
+            }
+        });
+
+        assert_eq!(f(), 10);
     }
 }
