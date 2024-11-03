@@ -18,31 +18,30 @@
 //!
 //! assert_eq!(fib(7), 13);
 //! ```
-//! 
+//!
 //! The generated code is not completely abstraction free as it uses one dyn trait
 //! (without any boxing) to overcome rust's recursive type limitations.
 //! In most cases, however, the optimizer should be able to eliminate any dynamic dispatch.
-//! 
+//!
 //! Unfortunately, mutable recursive closures are not supported.
-
 
 /// Takes a closure definition where the first parameter will be a [`Fn`] to the closure itself.
 /// Returns a recursive closure with the same signature, except the first parameter will be
 /// eliminated.
-/// 
+///
 /// The passed closure needs to have at least one parameter. This
 /// first parameter can be used to call the closure itself, achieving recursion.
 /// It must not be annotated with a type.
-/// 
+///
 /// Additional parameters will be parameters of the resulting closure.
 /// All additional parameters must be annotated with types.
-/// 
+///
 /// The closure definition needs to have a result-type annotation.
-/// 
+///
 /// `move` can be used and has the [usual semantic](https://doc.rust-lang.org/1.18.0/book/first-edition/closures.html#move-closures).
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use fix_fn::fix_fn;
 ///  
